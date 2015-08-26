@@ -1,9 +1,9 @@
-/*more01.c -version 0.1 of more
- * read and print 24 lines then pause for a few special commands
- */
-
 /*
-
+ *version 2: 针对ls /etc/ | more01.o 出现bug改进
+ * /dev/tty:1)向该文件写相当于输出数据到屏幕
+ *          2)读相当于从键盘上读取用户的输入
+ */
+/*
 +----> show 24 lines form inputs
 | +--> print [more?] message
 | |    Input Enter,SPACE,or q
@@ -46,9 +46,12 @@ do_more(FILE* fp){
        int num_of_lines = 0;
        //int see_more();
        int reply;
+       FILE* fp_tty = fopen("/dev/tty","r");
+       if(fp_tty == NULL)
+              exit(1);
        while (fgets(line,512,fp)){               /*more input*/
               if(num_of_lines == 24) {           /*full screen? 此时才接收用户的输入*/
-                  reply = see_more();            /*ask user*/
+                  reply = see_more(fp_tty);            /*ask user*/
                   if (reply == 0)                /*done*/
                          break;
                   num_of_lines -= reply;         /*reset count*/
@@ -60,10 +63,10 @@ do_more(FILE* fp){
        }
 }
 
-int see_more(){
+int see_more(FILE* cmd){
        int c;
        printf("\33[7m more? \33[m");
-       while((c = getchar())!=EOF){              /*get response*/
+       while((c = getc(cmd))!=EOF){              /*get response*/
               if('q' == c) return 0;
               if(' ' == c) return 24;            /*' '->next page*/
               if('\n' == c) return 1;            /*enter->next line*/
