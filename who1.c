@@ -1,10 +1,13 @@
+/*version 2.0 linux*/
+/*use utmp.h*/
 #include<stdio.h>
 #include<utmpx.h>
+#include<utmp.h>
 #include<fcntl.h>
 #include<unistd.h>
 
 #ifdef N
-struct utmpx {
+struct utmpx1 {
 	char ut_user[_UTX_USERSIZE];	/* login name */
 	char ut_id[_UTX_IDSIZE];	/* id */
 	char ut_line[_UTX_LINESIZE];	/* tty name */
@@ -16,10 +19,10 @@ struct utmpx {
 };
 #endif
 
-void show_info(struct utmpx* );
+void show_info(struct utmp* );
 
 int main(){
-	struct utmpx current_record;		/*read info into here*/
+	struct utmp current_record;		/*read info into here*/
 	int utmpxfd;
 	int reclen = sizeof(current_record);
 
@@ -32,8 +35,8 @@ int main(){
 	 * stdout 行缓存
 	 *
 	 */
-	if( (utmpxfd = open(UTMPX_FILE,O_RDONLY)) == -1 ){
-		perror(UTMPX_FILE);				/*输出字符串+strerror(errno)*/
+	if( (utmpxfd = open(_PATH_UTMP,O_RDONLY)) == -1 ){
+		perror(_PATH_UTMP);				/*输出字符串+strerror(errno)*/
 		/*fprintf(stderr,"%s %s",UTMPX_FIFE,strerror(errno));*/
 		exit(-1);
 	}
@@ -44,14 +47,14 @@ int main(){
 	return 0;
 }
 
-void show_info(struct utmpx* utmpxfd){
-	printf("%-8.8s",utmpxfd->ut_user);
+void show_info(struct utmp* utmpxfd){
+	//printf("%-8.8s",utmpxfd->ut_user);
+	printf("%-8.8s",utmpxfd->ut_host);
 	printf(" ");
 	printf("%-8.8s",utmpxfd->ut_line);
 	printf(" ");
-	printf("%10ld",utmpxfd->ut_tv);
+	//printf("%10ld",utmpxfd->ut_tv);
 	printf(" ");
-#define SHOWHOST 1
 #ifdef SHOWHOST
 	printf("%s",utmpxfd->ut_host);
 #endif
