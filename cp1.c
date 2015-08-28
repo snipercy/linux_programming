@@ -2,11 +2,11 @@
  * 程序流程：
  * 	  open sourcefile for reading
  * 	  open copyfile for writing
- * +->read from source to buffer -- eof? -+
- * |									  |
- * -- write from buffer to copy			  |
- * 										  |
- * 	  close sourcefile	 <----------------+
+ * +->read from source to buffer -- eof?   -+
+ * |				            |
+ * -- write from buffer to copy		    |
+ * 					    |
+ * 	  close sourcefile <----------------+
  * 	  close copyfile
  */
 
