@@ -18,7 +18,7 @@
 #define BUFFERSIZE 4096
 #define COPYMODE   0644
 
-//void oops(char*,char*);
+void oops(char*,char*);
 
 int main(int argc, char* argv[]){
 	int in_fd;

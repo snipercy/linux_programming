@@ -26,7 +26,7 @@ read把数据从内核缓冲区复制到进程缓冲区，write把数据从进�
 ## ls1.c version1.0
 - opendir(const char*)-->readdir(DIR)-->printf(dirent->d_name)-->closedir(DIR);
 ## ls2.c :show file status如何工作？
-用stat得到文件信息
+- 用stat得到文件信息
 
 
 
