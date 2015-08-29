@@ -1,11 +1,14 @@
 /*
  * use stat() to obtain and print file properties
+ * struct:stat
  */
 #include<stdio.h>
 #include<sys/types.h>
 #include<sys/stat.h>
+#include<string.h>
 
 void show_stat_info(char*,struct stat *);
+void mode_to_letters(int mode, char* str);
 
 int main(int argc, char* argv[]){
 	struct stat info;
@@ -24,13 +27,34 @@ int main(int argc, char* argv[]){
  * show some info from stat in a "name = value" fomat
  */
 void show_stat_info(char* fname,struct stat* buf){
-	printf("    mode: %o\n",buf->st_mode);	/*type+mode*/
+    char modestr[11];
+    mode_to_letters(buf->st_mode,modestr);
+    printf("    mode: %s\n",modestr);    /*int mode -> str mode*/
 	printf("    links: %d\n",buf->st_nlink);	/*links*/
 	printf("    user: %d\n",buf->st_uid);	/*userid*/
 	printf("    group: %d\n",buf->st_gid);	/*userid*/
-	printf("    size: %d\n",buf->st_size);	/*file size*/
-	printf("    modtime: %d\n",buf->st_mtime);	/*modified*/
+	printf("    size: %lld\n",buf->st_size);	/*file size*/
+	printf("    modtime: %ld\n",buf->st_mtime);	/*modified*/
 	printf("    name: %s\n",fname);	/*filename*/
+}
+
+void mode_to_letters(int mode,char* str){
+    strcpy(str,"----------")/*10 * '-'*/;
+    if(S_ISDIR(mode)) str[0] = 'd';     /*directory*/
+    if(S_ISCHR(mode)) str[0] = 'c';     /*char dev*/
+    if(S_ISBLK(mode)) str[0] = 'b';     /*block dev:disk dev*/
+
+    if(mode & S_IRUSR) str[1] = 'r';    /*3 bits for user*/
+    if(mode & S_IWUSR) str[2] = 'w';
+    if(mode & S_IXUSR) str[3] = 'x';
+ 
+    if(mode & S_IRGRP) str[4] = 'r';    /*3 bits for group*/
+    if(mode & S_IWGRP) str[5] = 'w';
+    if(mode & S_IXGRP) str[6] = 'x';
+ 
+    if(mode & S_IROTH) str[7] = 'r';    /*3 bits for other*/
+    if(mode & S_IWOTH) str[8] = 'w';
+    if(mode & S_IXOTH) str[9] = 'x';
 }
 
 #if 0
