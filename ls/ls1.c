@@ -1,5 +1,5 @@
 #include<stdio.h>
-#include<dirent.h>//directory entry
+#include<dirent.h>
 #include<sys/types.h>
 
 void do_ls(char[]);
