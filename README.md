@@ -1,7 +1,7 @@
 # cp
 ## version 1
 - 打开源文件；int in_fd = open(char* filename,mode_t mode)
-- 创建新文件，若文件不存在则创建，否则将它内容情况，长度设为0；   
+- 创建新文件，若文件不存在则创建，否则将它内容清空，长度设为0；   
 (int out_fd = create(char* filename, mode_t mode);
 - 读源文件；
 - 写入新文件，write函数返回实际写入的字节数
