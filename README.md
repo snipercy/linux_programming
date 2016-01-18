@@ -11,7 +11,7 @@
   open copyfile for writing
   +->read from source to buffer -- eof?-+
   |				                        |
-  -- write from buffer to copy		    |
+  -- write from buffer to copyfile	    |
   					                    |
   	  close sourcefile <----------------+
  	  close copyfile
