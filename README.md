@@ -1,8 +1,90 @@
-# 学习Unix/Linux系统编程
-[ls命令] (https://github.com/snipercy/linux_programming/tree/master/ls)
+# For Understanding Unix/Linux Programming
+-----
+## `cp` : 实现`bash`中的`cp(copy)`命令
+命令用法：`$cp srcfile targetfile`
+如果`targetfile`所指定的文件不存在，`cp`就创建这个文件；如果文件已经存在则覆盖，`targetfile`的内容与`srcfile`相同。
 
-[cp命令] (https://github.com/snipercy/linux_programming/tree/master/cp)
+###  1. 程序流程：
 
-[more命令] (https://github.com/snipercy/linux_programming/tree/master/more)
+```c
+  open sourcefile for reading
+  open copyfile for writing
+  +->read from source to buffer -- eof?-+
+  |				                        |
+  -- write from buffer to copy		    |
+  					                    |
+  	  close sourcefile <----------------+
+ 	  close copyfile
+```
 
-[who命令] (https://github.com/snipercy/linux_programming/tree/master/who)
+用户态的进程是不能访问内核空间的，否则就会出现`segmentfault`，因为没有访问权限，所以处于内核态的用户进程需要将**数据拷贝**到用户空间，这是系统调用开销大原因之一。
+
+扯一句，在网络编程模型中，为什么`epoll`比`select`/`poll`效率高，其中一个原因就是`epoll`减少了`fd`集合的拷贝。(* 先挖两个坑，`syscall`和`epoll`相关知识将将用两篇博文来整理一下*)
+
+另一个导致`syscall`开销大的的原因是：**运行环境的切换**。用户进程(`cp`)位于用户空间，内核位于系统空间，`cp`所要操作的文件是位于磁盘中的，而磁盘等设备只能被处于特权级(`ring 0`)的进程直接访问，即处于内核态的进程才可以访问。用户进程要想获得特权级，需要陷入内核态，可以通过系统调用来实现。具体到`cp`命令就通过调用`read`和`write`等`syscall`使得执行权从用户代码转换到内核代码，这种切换是需要时间的。
+当运行内核代码时，`cpu`工作在特权级(`ring 0`)，此时，内核代码使用内核空间中的堆栈和内存环境(内核空间)，这些需要在内核代码执行前准备好，系统调用结束后(`read`返回时)，`cpu`又需要切换到用户模式。
+有一个形象的例子来说明这种切换的开销：超人-普通人之间切换：换衣服开销
+
+
+### 2. 利用缓存提升程序效率
+
+#### a. 应用缓冲技术
+
+先看这样一个生活场景：我们需要煎3个荷包蛋，每次取超市买一个鸡蛋，回家煎好后再去超市买一个。显然，这是很低效的做法，完全可以一次性买3个鸡蛋再煎荷包蛋。
+
+`cp`命令也是做类似的事情：超市里的购物车对应于缓存，鸡蛋对应于源文件内容，荷包蛋对应于目标文件。`cp`要做的就是一次性尽可能多的将源文件中的内容拷贝到缓存文件中，再将缓存中文件拷贝到目标文件中，从而减少`read`和`write`调用的次数。
+
+综上，应用缓存的主要思想是一次读入大量的数据放入缓冲区中，需要的时候从缓冲区中取得数据。
+
+
+#### b. 内核缓冲技术
+
+上述的**应用缓冲技术**是为了减少系统调用的次数，从而提高程序的效率。`I/O`调用比系统调用还要慢，能直接操作外设的只有内核态程序，所以可以利用内核缓冲技术来较少`I/O`调用的次数。
+
+具体到`cp`程序：内核将磁盘上的数据块复制到内核缓冲区，当一个用户空间的进程需要从磁盘上读取数据时，是将内核缓冲区中的数据块复制到进程的缓冲区中的。
+
+当进程所需的数据块不在内核缓冲区时，该数据块加入请求数据列表中，并挂起进程。一段时间后，内核把相应数据块从磁盘读到内核缓冲区，然后再把数据复制到进程缓冲区中，最后唤醒被挂起的进程。
+
+所以，`read`是把数据从内核缓冲区复制到进程缓冲区，`write`把数据从进程过程区写到内核缓冲区而并非直接写入到磁盘中，这么做的目的是减少I/O提高效率，但也会带来弊端，如,断电导致数据丢失。
+
+> 在`Linux`系统中，为了加快数据的读取速度，默认的情况下，某些已经加载内存中的数据将不会直接被写回硬盘，而是先缓存在内存当中，如果一个数据被你重复的改写，那么由于他尚未被写入硬盘中，因此可以直接由内存当中读取出来，在速度上一定是快上相当多的！不过，如此一来也造成些许的困扰，那就是万一你的系统因为某些特殊情况造成不正常关机，由于数据尚未被写入硬盘当中，这个时候就需要sync这个命令来进行数据的写入动作,`shutdown`/`reboot`/`halt`等命令均已经在关机前自动执行了sync命令。
+
+------
+## ls : 实现`bash`中的`ls(list files)`命令
+### ls1.c
+主要步骤:
+```c
+DIR dir = opendir(const char *)
+readdir(dir)
+printf(dirent->d_name)
+closedir(dir)
+
+```
+
+程序运行结果：
+
+```c
+.
+..
+a.out
+fileinfo.c
+ls1.c
+ls2.c
+README.md
+
+```
+
+### ls2.c
+
+增加显示文件的属性，属性信息可以通过stat函数获得。
+
+```c
+drwxr-xr-x   7      cy   staff     238Jan 18 15:54.
+drwxr-xr-x   9      cy   staff     306Jan 18 15:48..
+-rwxr-xr-x   1      cy   staff    9640Jan 18 15:54a.out
+-rw-r--r--   1      cy   staff    3010Aug 30 00:34fileinfo.c
+-rw-r--r--   1      cy   staff    1735Aug 30 10:08ls1.c
+-rw-r--r--   1      cy   staff    3853Aug 30 10:45ls2.c
+-rw-r--r--   1      cy   staff     313Jan 17 14:40README.md
+
+```
