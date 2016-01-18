@@ -50,6 +50,7 @@
 > 在`Linux`系统中，为了加快数据的读取速度，默认的情况下，某些已经加载内存中的数据将不会直接被写回硬盘，而是先缓存在内存当中，如果一个数据被你重复的改写，那么由于他尚未被写入硬盘中，因此可以直接由内存当中读取出来，在速度上一定是快上相当多的！不过，如此一来也造成些许的困扰，那就是万一你的系统因为某些特殊情况造成不正常关机，由于数据尚未被写入硬盘当中，这个时候就需要sync这个命令来进行数据的写入动作,`shutdown`/`reboot`/`halt`等命令均已经在关机前自动执行了sync命令。
 
 ------
+
 ## ls : 实现`bash`中的`ls(list files)`命令
 ### ls1.c
 主要步骤:
@@ -87,4 +88,19 @@ drwxr-xr-x   9      cy   staff     306Jan 18 15:48..
 -rw-r--r--   1      cy   staff    3853Aug 30 10:45ls2.c
 -rw-r--r--   1      cy   staff     313Jan 17 14:40README.md
 
+```
+
+----
+
+## more : 实现`bash`中的`more`命令
+
+read and print 24 lines then pause for a few special commands
+
+```c
++----> show 24 lines form inputs
+| +--> print [more?] message
+| |    Input Enter,SPACE,or q
+| +--- if Enter, advance one line
++----- if SPACE
+       if q --> exit
 ```

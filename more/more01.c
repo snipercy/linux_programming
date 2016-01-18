@@ -7,8 +7,8 @@
 +----> show 24 lines form inputs
 | +--> print [more?] message
 | |    Input Enter,SPACE,or q
-| +--> if Enter, advance one line
-+----> if SPACE
+| +--- if Enter, advance one line
++----- if SPACE
        if q --> exit
 */
 
